@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-from domain.order.ports.order_service_interface import OrderServiceInterface
+from domain.order.ports.order_mediator_interface import OrderMediatorInterface
 
 from domain.order.value_objects import BuyerId
 from domain.order.value_objects import OrderId
@@ -23,8 +23,8 @@ from domain.order.schemas.order_schemas import (
 
 
 class OrderController:
-    def __init__(self, order_service: OrderServiceInterface):
-        self.service = order_service
+    def __init__(self, order_mediator: OrderMediatorInterface):
+        self.service = order_mediator
         self.router = APIRouter()
         self.router.add_api_route(
             '/', self.create_order, methods=['POST'], response_model=OrderCreateResponse

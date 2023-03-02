@@ -4,17 +4,17 @@ from typing import List
 from domain.order.value_objects import BuyerId, OrderItem, OrderId
 from domain.order.entities import Order
 from domain.maps.value_objects import Address
-
+from domain.base.ports.event_adapter_interface import DomainEventPublisher
 from domain.order.ports.order_database_interface import OrderDatabaseInterface  # noqa: E501
+from domain.order.ports.order_mediator_interface import AbstractComponent  # noqa: E501
 from domain.payment.ports.payment_adapter_interface import PaymentAdapterInterface  # noqa: E501
 from domain.product.ports.product_adapter_interface import ProductAdapterInterface  # noqa: E501
 from domain.delivery.ports.cost_calculator_interface import (
     DeliveryCostCalculatorAdapterInterface,
 )  # noqa: E501
-from domain.base.ports.event_adapter_interface import DomainEventPublisher  # noqa: E501
 
 
-class OrderServiceInterface(abc.ABC):
+class OrderCommandInterface(AbstractComponent):
 
     repository: OrderDatabaseInterface
 
@@ -41,10 +41,6 @@ class OrderServiceInterface(abc.ABC):
 
     @abc.abstractmethod
     async def cancel_order(self, order_id: OrderId):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def get_order_from_id(self, order_id: OrderId) -> Order:
         raise NotImplementedError
 
     @abc.abstractmethod

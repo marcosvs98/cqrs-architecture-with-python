@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from database import get_mongo_db
+from adapters.database import get_mongo_db
 
 
 async def startup(app: FastAPI):

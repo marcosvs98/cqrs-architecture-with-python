@@ -4,7 +4,7 @@ from domain.order.value_objects import BuyerId, OrderItem, OrderId
 from domain.order.entities import Order
 from domain.maps.value_objects import Address
 
-from domain.order.ports.order_service_interface import OrderServiceInterface  # noqa: E501
+from domain.order.ports.order_command_interface import OrderCommandInterface  # noqa: E501
 from domain.order.ports.order_database_interface import OrderDatabaseInterface  # noqa: E501
 from domain.payment.ports.payment_adapter_interface import PaymentAdapterInterface  # noqa: E501
 from domain.product.ports.product_adapter_interface import ProductAdapterInterface  # noqa: E501
@@ -15,7 +15,7 @@ from domain.base.ports.event_adapter_interface import DomainEventPublisher
 from domain.order.events import OrderCreated, OrderPaid, OrderCancelled
 
 
-class OrderService(OrderServiceInterface):
+class OrderCommand(OrderCommandInterface):
 
     repository: OrderDatabaseInterface
 
@@ -90,9 +90,6 @@ class OrderService(OrderServiceInterface):
 
         await self.event_publisher.publish(event)
         await self.repository.save(order)
-
-    async def get_order_from_id(self, order_id: OrderId) -> Order:
-        return await self.repository.from_id(order_id)
 
     async def _pay_order_tnx(self, order_id, is_payment_verified):
         order = await self.repository.from_id(order_id=order_id)

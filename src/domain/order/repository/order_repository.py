@@ -1,4 +1,4 @@
-from database import get_mongo_db
+from adapters.database import get_mongo_db
 from settings import MongoDatabaseSettings
 from typing import List
 from bson.objectid import ObjectId

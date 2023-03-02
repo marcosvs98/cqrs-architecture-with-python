@@ -1,4 +1,4 @@
-from database import get_mongo_db
+from adapters.database import get_mongo_db
 from settings import MongoDatabaseSettings
 from domain.base.event import DomainEvent
 from domain.base.ports.event_adapter_interface import DomainEventPublisher

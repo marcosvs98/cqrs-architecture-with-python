@@ -8,14 +8,17 @@ from settings import MongoDatabaseSettings
 from exceptions import CommonException
 from schemas import HealthCheck
 
-from domain.order.controllers.order_controller import OrderController
+from domain.order.adapters.order_event_publisher_adapter import OrderEventPublisher
 from domain.order.repository.order_repository import OrderDatabaseRepository
-from domain.order.services.order_service import OrderService
+from domain.order.controllers.order_controller import OrderController
+from domain.order.services.order_command import OrderCommand
+from domain.order.services.order_query import OrderQuery
+from domain.order.services.order_mediator import OrderMediator
+
 from domain.payment.adapters.paypal_adapter import PayPalPaymentAdapter
 from domain.product.adapters.product_adapter import ProductAdapter
 from domain.delivery.adapters.cost_calculator_adapter import DeliveryCostCalculatorAdapter
 from domain.maps.adapters.google_maps_adapter import GoogleMapsAdapter
-from domain.order.adapters.order_event_publisher_adapter import OrderEventPublisher
 
 
 def init_middlewares(app: FastAPI):
@@ -39,12 +42,17 @@ def init_routes(app: FastAPI):
 
     app.include_router(
         OrderController(
-            OrderService(
-                repository=OrderDatabaseRepository(),
-                payment_service=PayPalPaymentAdapter(),
-                product_service=ProductAdapter(),
-                delivery_service=DeliveryCostCalculatorAdapter(maps_service=GoogleMapsAdapter()),
-                event_publisher=OrderEventPublisher(),
+            OrderMediator(
+                command=OrderCommand(
+                    repository=OrderDatabaseRepository(),
+                    payment_service=PayPalPaymentAdapter(),
+                    product_service=ProductAdapter(),
+                    delivery_service=DeliveryCostCalculatorAdapter(maps_service=GoogleMapsAdapter()),
+                    event_publisher=OrderEventPublisher()
+                ),
+                query=OrderQuery(
+                    repository=OrderDatabaseRepository()
+                )
             )
         ).router,
         tags=['order'],
