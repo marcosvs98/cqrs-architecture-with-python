@@ -1,0 +1,11 @@
+aioredis==2.0.1
+dnspython>=2.1.0,<2.2.0
+fastapi>=0.68.1,<0.69.0
+fastapi_pagination==0.9.3
+motor>=2.5.1,<2.6.0
+pydantic>=1.8.2,<1.9.0
+pymongo>=3.12.0,<3.13.0
+python-decouple==3.6
+SQLAlchemy==1.4.41
+uvicorn==0.13.4
+requests
