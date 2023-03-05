@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3'
 
 services:
   ordering-service:
@@ -12,30 +12,24 @@ services:
     ports:
       - '8090:8090'
     environment:
-      MONGO_SERVER: event-source-mongo-db
-      MONGO_PORT: '27017'
-      MONGO_USERNAME: root
-      MONGO_PASSWORD: admin
+      ELASTICSEARCH_ENDPOINT: 'http://elasticsearch:9200'
     restart: always
-
-  event-source-mongo-db:
-    image: mongo:5.0
-    container_name: event-source-mongo-db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: admin
-    ports:
-      - '27017:27017'
-    restart: always
-
-  mongo-db-express:
-    image: mongo-express
-    container_name: mongo-db-express
-    restart: unless-stopped
-    ports:
-      - 8081:8081
-    environment:
-      ME_CONFIG_OPTIONS_EDITORTHEME: dracula
-      ME_CONFIG_MONGODB_URL: mongodb://root:admin@event-source-mongo-db:27017/
     depends_on:
-      - event-source-mongo-db
+      - elasticsearch
+      - kibana
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+
+  kibana:
+    container_name:   kibana
+    image: docker.elastic.co/kibana/kibana:7.14.2
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch

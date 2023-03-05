@@ -10,10 +10,6 @@ class OrderDatabaseInterface(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def next_identity(self) -> OrderId:
-        raise NotImplementedError
-
-    @abc.abstractmethod
     async def all(self) -> List[Order]:
         raise NotImplementedError
 

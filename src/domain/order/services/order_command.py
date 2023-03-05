@@ -34,14 +34,13 @@ class OrderCommand(OrderCommandInterface):
         self.event_publisher = event_publisher
 
     async def create_new_order(
-        self, buyer_id: BuyerId, items: List[OrderItem], destination: Address
-    ) -> OrderId:
+        self, order_id: OrderId, buyer_id: BuyerId, items: List[OrderItem], destination: Address
+    ) -> None:
 
         product_counts = [(item.product_id, int(item.amount)) for item in items]
         total_product_cost = await self.product_service.total_price(product_counts)
         payment_id = await self.payment_service.new_payment(total_product_cost)
         delivery_cost = await self.delivery_service.calculate_cost(total_product_cost, destination)
-        order_id = await self.repository.next_identity()
 
         order = Order(
             order_id=order_id,
@@ -65,16 +64,14 @@ class OrderCommand(OrderCommandInterface):
 
         await self.event_publisher.publish(event)
 
-        return order.order_id
-
-    async def pay_order(self, order_id: OrderId):
+    async def pay_order(self, order_id: OrderId) -> None:
         order = await self.repository.from_id(order_id=order_id)
         payment_id = order.payment_id
 
         is_payment_verified = await self.payment_service.verify_payment(payment_id=payment_id)
         await self._pay_order_tnx(order_id, is_payment_verified)
 
-    async def cancel_order(self, order_id: OrderId):
+    async def cancel_order(self, order_id: OrderId) -> None:
         order = await self.repository.from_id(order_id)
         order.cancel()
 
@@ -91,7 +88,7 @@ class OrderCommand(OrderCommandInterface):
         await self.event_publisher.publish(event)
         await self.repository.save(order)
 
-    async def _pay_order_tnx(self, order_id, is_payment_verified):
+    async def _pay_order_tnx(self, order_id, is_payment_verified) -> None:
         order = await self.repository.from_id(order_id=order_id)
         order.pay(is_payment_verified=is_payment_verified)
 

@@ -9,3 +9,5 @@ python-decouple==3.6
 SQLAlchemy==1.4.41
 uvicorn==0.13.4
 requests
+elasticsearch
+aiohttp

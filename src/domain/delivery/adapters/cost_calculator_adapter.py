@@ -27,10 +27,7 @@ class DeliveryCostCalculatorAdapter(DeliveryCostCalculatorAdapterInterface):
             destination
         )
 
-        if (
-            destination.bangkok_and_surrounding()
-            or distance_from_warehouse <= FREE_DISTANCE_THRESHOLD
-        ):
+        if distance_from_warehouse <= FREE_DISTANCE_THRESHOLD:
             return FREE
 
         return FLAT_PRICE

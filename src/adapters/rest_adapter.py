@@ -1,10 +1,7 @@
-from functools import partial
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-import event_handler
-from settings import MongoDatabaseSettings
 from exceptions import CommonException
 from schemas import HealthCheck
 
@@ -35,10 +32,6 @@ def init_routes(app: FastAPI):
     @app.get('/', status_code=200, response_model=HealthCheck)
     async def health_check():
         return {'status': 200}
-
-    app.state.event_source_config = MongoDatabaseSettings()
-    app.add_event_handler('startup', func=partial(event_handler.startup, app=app))
-    app.add_event_handler('shutdown', func=partial(event_handler.shutdown, app=app))
 
     app.include_router(
         OrderController(
