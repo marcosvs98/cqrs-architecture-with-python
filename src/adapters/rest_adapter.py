@@ -2,9 +2,11 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from settings import CACHE_SILENT_MODE
 from exceptions import CommonException
 from schemas import HealthCheck
 
+from adapters.redis_adapter import RedisAdapter
 from domain.order.adapters.order_event_publisher_adapter import OrderEventPublisher
 from domain.order.repository.order_repository import OrderDatabaseRepository
 from domain.order.controllers.order_controller import OrderController
@@ -45,7 +47,8 @@ def init_routes(app: FastAPI):
                 ),
                 query=OrderQuery(
                     repository=OrderDatabaseRepository()
-                )
+                ),
+                cache=RedisAdapter(silent_mode=CACHE_SILENT_MODE)
             )
         ).router,
         tags=['order'],

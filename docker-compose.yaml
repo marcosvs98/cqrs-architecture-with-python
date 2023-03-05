@@ -33,3 +33,10 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
+
+  redis:
+    image: "redis:alpine"
+    container_name: mk-crud-application-redis
+    command: redis-server
+    ports:
+      - "6379:6379"

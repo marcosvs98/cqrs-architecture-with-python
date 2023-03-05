@@ -1,7 +1,6 @@
 from bson.objectid import ObjectId
 from typing import List
 
-from elasticsearch import ElasticsearchException
 from pymongo.errors import DuplicateKeyError
 from adapters.database import get_event_store
 from domain.order.ports.order_database_interface import OrderDatabaseInterface  # noqa: E501
@@ -28,5 +27,5 @@ class OrderDatabaseRepository(OrderDatabaseInterface):
         order_id = ObjectId(str(entity.order_id))
         try:
             await self.event_store.index(index=self.collection_name, id=order_id, body=body)
-        except ElasticsearchException as e:
+        except DuplicateKeyError as e:
             raise EntityOutdated(detail=f'Order with OrderId {order_id} is not dated') from e

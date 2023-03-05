@@ -51,6 +51,9 @@ class OrderCommand(OrderCommandInterface):
             payment_id=payment_id,
         )
         await self.repository.save(order)
+        await self.mediator.cache.set(
+            key=order_id, data=order.dict()
+        )
 
         event = OrderCreated(
             order_id=order_id,

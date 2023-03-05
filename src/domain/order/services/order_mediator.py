@@ -1,6 +1,7 @@
 from typing import List
 from bson.objectid import ObjectId
 
+from ports.cache_interface import CacheInterface
 from domain.order.value_objects import BuyerId, OrderItem, OrderId
 from domain.order.entities import Order
 from domain.maps.value_objects import Address
@@ -14,8 +15,10 @@ class OrderMediator(OrderMediatorInterface):
     def __init__(
         self,
         command: OrderCommandInterface,
-        query: OrderQueryInterface
+        query: OrderQueryInterface,
+        cache: CacheInterface
     ) -> None:
+        self.cache = cache
         self._command = command
         self._command.mediator = self
         self._query = query

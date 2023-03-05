@@ -6,8 +6,6 @@ from domain.order.value_objects import BuyerId, OrderItem, OrderId
 from domain.order.entities import Order
 from domain.maps.value_objects import Address
 
-from domain.base.ports.event_adapter_interface import DomainEventPublisher
-
 
 class OrderMediatorInterface(abc.ABC):
     """

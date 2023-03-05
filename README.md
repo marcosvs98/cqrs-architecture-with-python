@@ -66,6 +66,7 @@ Each of this group of applications/services belongs to a specific bounded contex
 - **Python 3.9**
 - **FastAPI (Rest API)**
 - **ElasticSearch**
+- **Redis**
 - **CQRS**
 - **Ports & Adapters**
 - **Event Sourcing**
