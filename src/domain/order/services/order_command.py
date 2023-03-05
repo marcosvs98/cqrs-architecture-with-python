@@ -52,7 +52,7 @@ class OrderCommand(OrderCommandInterface):
         )
         await self.repository.save(order)
         await self.mediator.cache.set(
-            key=order_id, data=order.dict()
+            key=str(order_id), data=order.dict()
         )
 
         event = OrderCreated(

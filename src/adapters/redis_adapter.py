@@ -42,7 +42,7 @@ class RedisAdapter(CacheInterface):
     @silent_mode_wrapper
     async def set(self, key: str, data: dict, ttl: int = 300):
         redis = self.__open_connection()
-        await redis.set(key, json.dumps(data), ex=300)
+        await redis.set(key, json.dumps(data, default=str), ex=300)
 
     @silent_mode_wrapper
     async def delete(self, key: str):
