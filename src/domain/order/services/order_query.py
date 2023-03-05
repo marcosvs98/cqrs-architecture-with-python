@@ -13,7 +13,7 @@ class OrderQuery(OrderQueryInterface):
 
     async def get_order_from_id(self, order_id: OrderId) -> Order:
         try:
-            order = await self.mediator.cache.get(key=order_id)
+            order = Order(**await self.mediator.cache.get(key=order_id))
         except:
             order = await self.repository.from_id(order_id)
-        return Order(**order)
+        return order

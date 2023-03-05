@@ -1,5 +1,4 @@
 from bson.objectid import ObjectId
-from typing import List
 
 from pymongo.errors import DuplicateKeyError
 from adapters.database import get_event_store
@@ -13,10 +12,6 @@ class OrderDatabaseRepository(OrderDatabaseInterface):
     def __init__(self, collection_name='order'):
         self.event_store = get_event_store()
         self.collection_name = collection_name
-
-    async def all(self, limit=10) -> List[Order]:
-        raw_list = await self.event_store[self.collection_name].find().to_list(limit)
-        return [Order.deserialize(raw) for raw in raw_list]
 
     async def from_id(self, order_id: OrderId) -> Order:
         document = await self.event_store.get(index=self.collection_name, id=order_id)
