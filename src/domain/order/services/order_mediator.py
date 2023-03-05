@@ -28,7 +28,7 @@ class OrderMediator(OrderMediatorInterface):
         self, buyer_id: BuyerId, items: List[OrderItem], destination: Address
     ) -> OrderId:
 
-        order_id = await self.repository.next_identity()
+        order_id = await self.next_identity()
 
         await self._command.create_new_order(
             order_id=order_id,

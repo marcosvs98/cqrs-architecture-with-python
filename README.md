@@ -1,5 +1,5 @@
-# hexagonal-architecture-boilerplate-fastapi
-Applying pattern Ports and Adapters with Python Fastapi.
+# cqrs-architecture-with-python
+Applying pattern Ports and Adapters + CQRS with Python Fastapi.
 
 
 ## Bounded Contexts
@@ -19,11 +19,11 @@ Applying pattern Ports and Adapters with Python Fastapi.
     </tr>
     <tr>
         <td><strong>Architectural patterns:</strong></td>
-        <td>Eventsourcing, Hexagonal Architecture</td>
+        <td>Eventsourcing, Hexagonal Architecture and CQRS</td>
     </tr>
     <tr>
         <td><strong>Technology:</strong></td>
-        <td>Python with (FastAPI) and MongoDB</td>
+        <td>Python with (FastAPI) and ElasticSearch</td>
     </tr>
 </table>
 
@@ -65,15 +65,14 @@ Each of this group of applications/services belongs to a specific bounded contex
 
 - **Python 3.9**
 - **FastAPI (Rest API)**
-- **MongoDB**
+- **ElasticSearch**
+- **CQRS**
+- **Ports & Adapters**
+- **Event Sourcing**
 
-This project has a structure that aims at the maximum decoupling between layers in order to give
-support for creating components that are reusable across the entire business domain. It has a simple User CRUD with
-examples of package organization and tests.
+In addition to others, the main pattern that guides this project is the Ports & Adapter + CQRS. In summary, this pattern provides a way to organize code so that business logic is encapsulated, but separated from the underlying delivery mechanism. This allows for better maintenance and fewer dependencies.
 
-In addition to others, the main pattern that guides this project is the Hexagonal (+ Clean Architecture), in short, this pattern
-provides a way to organize code so that the business logic is encapsulated, but separate from the underlying engine.
-delivery. This allows for better maintenance and fewer dependencies.
+With CQRS, we have a clear separation of concerns, making the codebase easier to understand and maintain.Developers can more easily reason about how changes to the codebase will affect the overall system. Additionally, its use allows each model to evolve independently since they are not strongly coupled. This means changes to one model can be made without affecting the other model.
 
 
 ---
