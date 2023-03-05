@@ -23,7 +23,7 @@ Applying pattern Ports and Adapters + CQRS with Python Fastapi.
     </tr>
     <tr>
         <td><strong>Technology:</strong></td>
-        <td>Python with (FastAPI) and ElasticSearch</td>
+        <td>Python with (FastAPI), ElasticSearch and Redis</td>
     </tr>
 </table>
 
