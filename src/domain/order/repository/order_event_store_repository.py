@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class OrderEventStoreRepository(OrderEventStoreRepositoryInterface):
     """
-    Repository for storing and retrieving vehicle domain
+    Repository for storing and retrieving order domain
     events using event sourcing.
     """
 
