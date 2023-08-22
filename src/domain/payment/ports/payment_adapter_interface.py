@@ -1,4 +1,5 @@
 import abc
+
 from domain.payment.value_objects import PaymentId
 
 

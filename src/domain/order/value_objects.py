@@ -2,7 +2,8 @@ from enum import Enum
 from typing import Union
 
 from pydantic import validator
-from domain.base.value_object import ValueObject, StrIdValueObject
+
+from domain.base.value_object import StrIdValueObject, ValueObject
 
 
 class OrderStatusEnum(str, Enum):

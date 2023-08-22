@@ -56,13 +56,13 @@ class OrderQuery(OrderQueryInterface):
         try:
             return self.sourcing[object_id]
         except KeyError:
-            raise KeyError(f"Object Id {object_id} not found.")
+            raise KeyError(f'Object Id {object_id} not found.')
 
 
 class OrderCommand(OrderCommandInterface):
     def create(self, object_id: int, text: str) -> None:
         self.sourcing[object_id] = text
-        self.mediator.publish_event(self, f"Object with Id {object_id} was been created.")
+        self.mediator.publish_event(self, f'Object with Id {object_id} was been created.')
 
 
 
@@ -84,10 +84,10 @@ class OrderMediator(OrderMediatorInterface):
         return self._query.from_id(object_id=object_id)
 
     def publish_event(self, sender: object, event: str) -> None:
-        print(f"{sender} - published: {event}")
+        print(f'{sender} - published: {event}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # The client code.
 
     order_mediator = OrderMediator(

@@ -1,5 +1,6 @@
 import abc
 from typing import List, Tuple
+
 from domain.product.value_objects import ProductId
 
 

@@ -1,11 +1,12 @@
 import uuid
-from typing import List
 from enum import Enum
+from typing import List
+
 from bson import ObjectId
 from pydantic import BaseModel
+
 from domain.order.entities import Order
-from domain.order.value_objects import OrderId
-from domain.order.value_objects import BuyerId
+from domain.order.value_objects import BuyerId, OrderId
 from domain.payment.value_objects import PaymentId
 
 

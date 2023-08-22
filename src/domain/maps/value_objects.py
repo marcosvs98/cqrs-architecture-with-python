@@ -1,6 +1,8 @@
 from enum import Enum
-from domain.base.value_object import ValueObject
+
 from pydantic import validator
+
+from domain.base.value_object import ValueObject
 
 
 class StatesEnum(str, Enum):

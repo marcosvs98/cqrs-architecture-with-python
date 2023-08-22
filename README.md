@@ -43,10 +43,10 @@ Customers use the website application(s) to place orders. Application coordinate
 Sub-domain *software programing* models:
 
  - [ordering](https://github.com/marcosvs98/hexagonal-architecture-with-python/tree/main/src/domain)
- 
+
 > Domain model is mainly a software programing model which is applied to a specific sub-domain.
 > It defines the vocabulary and acts as a communication tool for everyone involved (business and IT), deriving a [Ubiquitous Language](https://martinfowler.com/bliki/UbiquitousLanguage.html).
- 
+
 ## Bounded Context
 
 Each of this group of applications/services belongs to a specific bounded context:

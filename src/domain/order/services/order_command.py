@@ -1,27 +1,27 @@
 from typing import List
 
-from domain.order.value_objects import BuyerId, OrderItem, OrderId
-from domain.order.entities import Order
-from domain.maps.value_objects import Address
-
-from domain.order.ports.order_command_interface import OrderCommandInterface  # noqa: E501
-from domain.order.ports.order_database_interface import OrderDatabaseInterface  # noqa: E501
-from domain.payment.ports.payment_adapter_interface import PaymentAdapterInterface  # noqa: E501
-from domain.product.ports.product_adapter_interface import ProductAdapterInterface  # noqa: E501
-from domain.delivery.ports.cost_calculator_interface import (
-    DeliveryCostCalculatorAdapterInterface,
-)  # noqa: E501
 from domain.base.ports.event_adapter_interface import DomainEventPublisher
-from domain.order.events import OrderCreated, OrderPaid, OrderCancelled
+from domain.delivery.ports.cost_calculator_interface import \
+    DeliveryCostCalculatorAdapterInterface  # noqa: E501
+from domain.maps.value_objects import Address
+from domain.order.entities import Order
+from domain.order.events import OrderCancelled, OrderCreated, OrderPaid
+from domain.order.ports.order_aggregate_repository_interface import \
+    OrderAggregateRepositoryInterface
+from domain.order.ports.order_command_interface import \
+    OrderCommandInterface  # noqa: E501
+from domain.order.value_objects import BuyerId, OrderId, OrderItem
+from domain.payment.ports.payment_adapter_interface import \
+    PaymentAdapterInterface  # noqa: E501
+from domain.product.ports.product_adapter_interface import \
+    ProductAdapterInterface  # noqa: E501
 
 
 class OrderCommand(OrderCommandInterface):
 
-    repository: OrderDatabaseInterface
-
     def __init__(
         self,
-        repository: OrderDatabaseInterface,
+        repository: OrderAggregateRepositoryInterface,
         payment_service: PaymentAdapterInterface,
         product_service: ProductAdapterInterface,
         delivery_service: DeliveryCostCalculatorAdapterInterface,
@@ -51,19 +51,9 @@ class OrderCommand(OrderCommandInterface):
             payment_id=payment_id,
         )
         await self.repository.save(order)
-        await self.mediator.cache.set(
-            key=str(order_id), data=order.dict()
-        )
+        await self.mediator.cache_repository.persist_order(order)
 
-        event = OrderCreated(
-            order_id=order_id,
-            buyer_id=buyer_id,
-            items=items,
-            product_cost=total_product_cost,
-            delivery_cost=delivery_cost,
-            payment_id=payment_id,
-            destination=destination,
-        )
+        event = OrderCreated(aggregate=order)
 
         await self.event_publisher.publish(event)
 
@@ -78,15 +68,7 @@ class OrderCommand(OrderCommandInterface):
         order = await self.repository.from_id(order_id)
         order.cancel()
 
-        event = OrderCancelled(
-            order_id=order.order_id,
-            buyer_id=order.buyer_id,
-            items=order.items,
-            product_cost=order.product_cost,
-            delivery_cost=order.delivery_cost,
-            payment_id=order.payment_id,
-            version=order.version,
-        )
+        event = OrderCancelled(aggregate=order)
 
         await self.event_publisher.publish(event)
         await self.repository.save(order)
@@ -95,14 +77,6 @@ class OrderCommand(OrderCommandInterface):
         order = await self.repository.from_id(order_id=order_id)
         order.pay(is_payment_verified=is_payment_verified)
 
-        event = OrderPaid(
-            order_id=order.order_id,
-            buyer_id=order.buyer_id,
-            items=order.items,
-            product_cost=order.product_cost,
-            delivery_cost=order.delivery_cost,
-            payment_id=order.payment_id,
-            version=order.version,
-        )
+        event = OrderPaid(aggregate=order)
         await self.event_publisher.publish(event)
         await self.repository.save(order)

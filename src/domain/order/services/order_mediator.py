@@ -1,14 +1,18 @@
 from typing import List
+
 from bson.objectid import ObjectId
 
-from ports.cache_interface import CacheInterface
-from domain.order.value_objects import BuyerId, OrderItem, OrderId
-from domain.order.entities import Order
 from domain.maps.value_objects import Address
-
-from domain.order.ports.order_query_interface import OrderQueryInterface  # noqa: E501
-from domain.order.ports.order_command_interface import OrderCommandInterface  # noqa: E501
-from domain.order.ports.order_mediator_interface import OrderMediatorInterface  # noqa: E501
+from domain.order.entities import Order
+from domain.order.ports.order_command_interface import \
+    OrderCommandInterface  # noqa: E501
+from domain.order.ports.order_mediator_interface import \
+    OrderMediatorInterface  # noqa: E501
+from domain.order.ports.order_persistence_repository_interface import \
+    OrderPersistenceRepositoryInterface
+from domain.order.ports.order_query_interface import \
+    OrderQueryInterface  # noqa: E501
+from domain.order.value_objects import BuyerId, OrderId, OrderItem
 
 
 class OrderMediator(OrderMediatorInterface):
@@ -16,9 +20,9 @@ class OrderMediator(OrderMediatorInterface):
         self,
         command: OrderCommandInterface,
         query: OrderQueryInterface,
-        cache: CacheInterface
+        cache_repository: OrderPersistenceRepositoryInterface,
     ) -> None:
-        self.cache = cache
+        self.cache_repository = cache_repository
         self._command = command
         self._command.mediator = self
         self._query = query

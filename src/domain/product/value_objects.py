@@ -1,4 +1,5 @@
 from typing import Union
+
 from domain.base.value_object import StrIdValueObject
 
 

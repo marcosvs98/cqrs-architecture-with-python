@@ -1,16 +1,11 @@
 from typing import List
 
 from domain.base.entity import AggregateRoot
-from domain.payment.value_objects import PaymentId
-from domain.order.value_objects import OrderId
-from domain.order.value_objects import BuyerId
-from domain.order.value_objects import OrderItem
-from domain.order.value_objects import OrderStatus
 from domain.order.exceptions.order_exceptions import (
-    OrderAlreadyCancelledException,
-    OrderAlreadyPaidException,
-    PaymentNotVerifiedException,
-)
+    OrderAlreadyCancelledException, OrderAlreadyPaidException,
+    PaymentNotVerifiedException)
+from domain.order.value_objects import BuyerId, OrderId, OrderItem, OrderStatus
+from domain.payment.value_objects import PaymentId
 
 
 class Order(AggregateRoot):

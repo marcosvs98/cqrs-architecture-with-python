@@ -1,4 +1,5 @@
 import abc
+
 from domain.maps.value_objects import Address
 
 

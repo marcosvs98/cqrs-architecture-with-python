@@ -1,14 +1,20 @@
-from adapters.database import get_event_store
 from domain.base.event import DomainEvent
 from domain.base.ports.event_adapter_interface import DomainEventPublisher
+from domain.order.ports.event_publisher_interface import \
+    EventPublisherInterface
+from domain.order.ports.order_event_store_repository_interface import \
+    OrderEventStoreRepositoryInterface
 
 
 class OrderEventPublisher(DomainEventPublisher):
-    def __init__(self, collection_name='order_events'):
-        self.event_store = get_event_store()
-        self.collection_name = collection_name
+    def __init__(
+        self,
+        repository: OrderEventStoreRepositoryInterface,
+        publisher: EventPublisherInterface,
+    ):
+        self.repository = repository
+        self.publisher = publisher
 
-    async def publish(self, event: DomainEvent):
-        await self.event_store.index(
-            index=self.collection_name, id=event.order_id, body=event.dict()
-        )
+    async def publish(self, event: DomainEvent) -> None:
+        await self.repository.save(event)
+        await self.publisher.publish_event(event)

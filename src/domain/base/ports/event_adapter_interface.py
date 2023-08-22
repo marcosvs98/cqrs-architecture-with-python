@@ -1,4 +1,5 @@
 import abc
+
 from domain.base.event import DomainEvent
 
 

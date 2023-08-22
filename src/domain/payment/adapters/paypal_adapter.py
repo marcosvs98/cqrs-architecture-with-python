@@ -1,6 +1,7 @@
 import uuid
 
-from domain.payment.ports.payment_adapter_interface import PaymentAdapterInterface
+from domain.payment.ports.payment_adapter_interface import \
+    PaymentAdapterInterface
 from domain.payment.value_objects import PaymentId
 
 

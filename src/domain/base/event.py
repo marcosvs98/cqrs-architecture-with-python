@@ -1,8 +1,18 @@
-from domain.base.model import Model
+from datetime import datetime as dt
+from uuid import UUID, uuid4
+
+from pydantic import Field
+
+from domain.base.entity import AggregateRoot, Entity
 
 
-class DomainEvent(Model):
+class DomainEvent(Entity):
     """Base class for domain events objects"""
+
+    event_name: str
+    tracker_id: UUID = Field(default_factory=uuid4)
+    datetime: dt = Field(default_factory=dt.now)
+    aggregate: AggregateRoot
 
     @classmethod
     def domain_event_name(cls):

@@ -1,7 +1,8 @@
 from typing import List, Tuple
 
+from domain.product.ports.product_adapter_interface import \
+    ProductAdapterInterface
 from domain.product.value_objects import ProductId
-from domain.product.ports.product_adapter_interface import ProductAdapterInterface
 
 
 class ProductAdapter(ProductAdapterInterface):

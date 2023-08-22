@@ -1,4 +1,5 @@
 import uvicorn
+
 import settings
 from app import create_app
 

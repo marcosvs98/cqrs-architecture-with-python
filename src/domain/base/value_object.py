@@ -1,6 +1,8 @@
 from typing import TypeVar
-from domain.base.model import Model
+
 from pydantic import validator
+
+from domain.base.model import Model
 
 ImplementationType = TypeVar('ImplementationType', bound='ValueObject')
 

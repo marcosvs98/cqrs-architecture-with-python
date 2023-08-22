@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
+
+from rest import init_middlewares, init_routes
 from settings import APPLICATION_NAME
-from adapters.rest_adapter import init_routes, init_middlewares
 
 
 def create_app():
