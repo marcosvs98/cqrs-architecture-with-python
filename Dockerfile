@@ -1,50 +1,43 @@
-# Use uma imagem Python específica
+# Use a specific Python image
 FROM python:3.10
 
-# Cria um usuário não privilegiado para execução da aplicação
+# Create a non-privileged user for running the application
 RUN useradd -m -s /bin/bash userapp
 
-RUN apt update
-RUN apt install make -y
-RUN apt install --no-install-recommends -y \
-    ca-certificates \
-    locales locales-all \
+# Update and install necessary packages
+RUN apt update \
+    && apt install -y make \
+    && apt install --no-install-recommends -y ca-certificates locales locales-all \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Set up locale settings
 RUN locale-gen pt_BR.UTF-8
 ENV LANG pt_BR.UTF-8
 ENV LANGUAGE pt_BR:pt_br
 ENV LC_ALL pt_BR.UTF-8
 
-# Remove o delay do log
+# Remove log delay
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /home/userapp/app/src/
 
-# Define o diretório de trabalho
-#WORKDIR /code
+# Set the working directory
+WORKDIR /home/userapp/app
 
-# Copia apenas os arquivos necessários para instalar as dependências
-COPY --chown=userapp:userapp ./pyproject.toml ./
-#COPY pyproject.toml /code/
-# poetry.lock /app/
+# Copy only necessary files to install dependencies
+COPY --chown=userapp:userapp ./pyproject.toml ./poetry.lock /home/userapp/app/
 
-# Instala as dependências usando o Poetry
-RUN pip install poetry
-RUN poetry config virtualenvs.create false
+# Install Poetry and dependencies
+RUN pip install poetry \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-cache -vvv
 
-
-# Install Dependencies
-RUN poetry install --no-interaction --no-cache -vvv
-
-# Copia o restante da aplicação
+# Copy the rest of the application
 COPY --chown=userapp:userapp . .
-#/src /code/src
 
-# Define o usuário padrão para execução da aplicação
+# Set the default user for running the application
 USER userapp
 
+# Set the entry point and default command
 ENTRYPOINT ["poetry", "run", "--"]
 CMD ["./start.sh"]
-# Configura o ponto de entrada e o comando padrão
-#CMD ["poetry", "run", "uvicorn", "app:create_app()", "--host", "0.0.0.0", "--port", "8090"]

@@ -19,11 +19,11 @@ Applying pattern Ports and Adapters + CQRS with Python Fastapi.
     </tr>
     <tr>
         <td><strong>Architectural patterns:</strong></td>
-        <td>Eventsourcing, Hexagonal Architecture and CQRS</td>
+        <td>Event Sourcing, Hexagonal Architecture and CQRS</td>
     </tr>
     <tr>
         <td><strong>Technology:</strong></td>
-        <td>Python with (FastAPI), ElasticSearch and Redis</td>
+        <td>Python with (FastAPI), MongoDB and Redis</td>
     </tr>
 </table>
 
@@ -63,9 +63,10 @@ Each of this group of applications/services belongs to a specific bounded contex
 
 ## Technologies and patterns used
 
-- **Python 3.9**
+- **Python 3.10**
 - **FastAPI (Rest API)**
-- **ElasticSearch**
+- **MongoDB**
+- **Pydantic 2.5**
 - **Redis**
 - **CQRS**
 - **Ports & Adapters**
