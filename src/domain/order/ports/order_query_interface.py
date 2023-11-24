@@ -1,14 +1,15 @@
 import abc
 
-from domain.order.entities import Order
-from domain.order.ports.order_aggregate_repository_interface import \
-    OrderAggregateRepositoryInterface
-from domain.order.ports.order_mediator_interface import \
-    AbstractComponent  # noqa: E501
-from domain.order.value_objects import OrderId
+from domain.order.model.entities import Order
+from domain.order.model.value_objects import OrderId
+from domain.order.ports.order_aggregate_repository_interface import (
+    OrderAggregateRepositoryInterface,
+)
+from domain.order.ports.order_mediator_interface import AbstractComponent  # noqa: E501
 
 
 class OrderQueryInterface(AbstractComponent):
+    """Interface for querying orders."""
 
     @abc.abstractmethod
     def __init__(self, repository: OrderAggregateRepositoryInterface):

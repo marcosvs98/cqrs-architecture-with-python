@@ -1,13 +1,11 @@
 import motor.motor_asyncio
 import pymongo
 
-from domain.order.ports.store_connector_adapter_interface import \
-    StoreConnectorAdapterInterface
+from domain.order.ports.store_connector_adapter_interface import StoreConnectorAdapterInterface
 
 
 class MongoDBAdapterException(Exception):
     pass
-
 
 
 class AsyncMongoDBConnectorAdapter(StoreConnectorAdapterInterface):

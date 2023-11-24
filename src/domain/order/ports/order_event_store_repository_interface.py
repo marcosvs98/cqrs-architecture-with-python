@@ -1,14 +1,15 @@
 import abc
-from typing import Union
 
 from domain.base.entity import AggregateRoot
 from domain.base.event import DomainEvent
-from domain.order.value_objects import OrderId
+from domain.order.model.value_objects import OrderId
 
 
 class OrderEventStoreRepositoryInterface(abc.ABC):
+    """Interface for managing order context events."""
+
     @abc.abstractmethod
-    async def from_id(self, order_id: OrderId) -> Union[AggregateRoot, None]:
+    async def from_id(self, order_id: OrderId) -> AggregateRoot | None:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -20,9 +21,7 @@ class OrderEventStoreRepositoryInterface(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_last_event_version_from_entity(
-        self, order_id: OrderId
-    ) -> Union[DomainEvent, None]:
+    async def get_last_event_version_from_entity(self, order_id: OrderId) -> DomainEvent | None:
         raise NotImplementedError
 
     @abc.abstractmethod

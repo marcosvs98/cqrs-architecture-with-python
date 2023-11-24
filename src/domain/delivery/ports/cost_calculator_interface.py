@@ -1,7 +1,7 @@
 import abc
 
+from domain.maps.model.value_objects import Address
 from domain.maps.ports.maps_adapter_interface import MapsAdapterInterface
-from domain.maps.value_objects import Address
 
 
 class DeliveryCostCalculatorAdapterInterface(abc.ABC):

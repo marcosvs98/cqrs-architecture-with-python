@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel, ConfigDict
 
 
-class Model(BaseModel, extra=Extra.allow):
+class Model(BaseModel):
     """Base class for model objects"""
+
+    model_config = ConfigDict(extra='allow')

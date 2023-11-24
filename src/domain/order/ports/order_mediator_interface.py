@@ -1,19 +1,14 @@
 import abc
-from typing import List
 
-from bson.objectid import ObjectId
-
-from domain.maps.value_objects import Address
-from domain.order.entities import Order
-from domain.order.value_objects import BuyerId, OrderId, OrderItem
+from domain.maps.model.value_objects import Address
+from domain.order.model.entities import Order
+from domain.order.model.value_objects import BuyerId, OrderId, OrderItem
 
 
 class OrderMediatorInterface(abc.ABC):
-    """
-    The Mediator interface declares a method used by components to notify the
+    """The Mediator interface declares a method used by components to notify the
     mediator about various events. The Mediator may react to these events and
-    pass the execution to other components.
-    """
+    pass the execution to other components."""
 
     @abc.abstractmethod
     async def next_identity(self) -> OrderId:
@@ -21,7 +16,7 @@ class OrderMediatorInterface(abc.ABC):
 
     @abc.abstractmethod
     async def create_new_order(
-        self, buyer_id: BuyerId, items: List[OrderItem], destination: Address
+        self, buyer_id: BuyerId, items: list[OrderItem], destination: Address
     ) -> OrderId:
         raise NotImplementedError
 
@@ -39,10 +34,8 @@ class OrderMediatorInterface(abc.ABC):
 
 
 class AbstractComponent(metaclass=abc.ABCMeta):
-    """
-    The Base Component provides the basic functionality of storing a mediator's
-    instance inside component objects.
-    """
+    """The Base Component provides the basic functionality of storing a mediator's
+    instance inside component objects."""
 
     def __init__(self, mediator: OrderMediatorInterface = None) -> None:
         self._mediator = mediator

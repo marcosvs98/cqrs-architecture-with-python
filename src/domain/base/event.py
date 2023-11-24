@@ -1,9 +1,10 @@
 from datetime import datetime as dt
+from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
-from domain.base.entity import AggregateRoot, Entity
+from domain.base.entity import Entity
 
 
 class DomainEvent(Entity):
@@ -12,7 +13,7 @@ class DomainEvent(Entity):
     event_name: str
     tracker_id: UUID = Field(default_factory=uuid4)
     datetime: dt = Field(default_factory=dt.now)
-    aggregate: AggregateRoot
+    aggregate: Any
 
     @classmethod
     def domain_event_name(cls):
@@ -23,5 +24,4 @@ class DomainEvent(Entity):
             return False
         return self.serialize() == other.serialize()
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)

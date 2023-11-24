@@ -12,7 +12,7 @@ def silent_mode_wrapper(function):
         if silent_mode:
             try:
                 return await function(*args, **kwargs)
-            except Exception as exc:
+            except Exception:
                 return False
         else:
             return await function(*args, **kwargs)
@@ -21,7 +21,6 @@ def silent_mode_wrapper(function):
 
 
 class RedisAdapter(CacheInterface):
-
     @staticmethod
     def __open_connection():
         redis_url = 'redis://'

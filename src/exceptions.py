@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any
 
 
 class CommonException(Exception):
@@ -6,11 +6,9 @@ class CommonException(Exception):
 
     code: int = 400
     message: str
-    detail: Union[Any, None]
+    detail: Any | None
 
-    def __init__(
-        self, code: int = 400, message: str = 'Bad Request', detail: Union[Any, None] = None
-    ):
+    def __init__(self, code: int = 400, message: str = 'Bad Request', detail: Any | None = None):
         self.code = code
         self.message = message
         self.detail = detail

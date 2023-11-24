@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "cqrs-architecture-with-python-event-sourcing"
+version = "0.1.0"
+description = ""
+authors = ["Marcos Silveira <47537283+MarcosVs98@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "cqrs_architecture_with_python_event_sourcing"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+aioredis = "^2.0.1"
+dnspython = "^2.4.2"
+fastapi = "^0.104.1"
+fastapi-pagination = "^0.12.12"
+motor = "^3.3.2"
+pydantic = "^2.5.1"
+pymongo = "^4.6.0"
+python-decouple = "^3.8"
+uvicorn = {extras = ["standard"], version = "^0.18.3"}
+requests = "^2.31.0"
+aiohttp = "^3.9.0"
+aiokafka = "^0.8.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

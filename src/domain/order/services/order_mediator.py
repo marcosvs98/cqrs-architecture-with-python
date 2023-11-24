@@ -1,26 +1,25 @@
-from typing import List
-
 from bson.objectid import ObjectId
 
-from domain.maps.value_objects import Address
-from domain.order.entities import Order
-from domain.order.ports.order_command_interface import \
-    OrderCommandInterface  # noqa: E501
-from domain.order.ports.order_mediator_interface import \
-    OrderMediatorInterface  # noqa: E501
-from domain.order.ports.order_persistence_repository_interface import \
-    OrderPersistenceRepositoryInterface
-from domain.order.ports.order_query_interface import \
-    OrderQueryInterface  # noqa: E501
-from domain.order.value_objects import BuyerId, OrderId, OrderItem
+from domain.maps.model.value_objects import Address
+from domain.order.model.entities import Order
+from domain.order.model.value_objects import BuyerId, OrderId, OrderItem
+from domain.order.ports.order_aggregate_repository_interface import (
+    OrderAggregateRepositoryInterface,
+)
+from domain.order.ports.order_command_interface import OrderCommandInterface  # noqa: E501
+from domain.order.ports.order_mediator_interface import OrderMediatorInterface  # noqa: E501
+from domain.order.ports.order_query_interface import OrderQueryInterface  # noqa: E501
 
 
 class OrderMediator(OrderMediatorInterface):
+    """Mediates communication between the order command
+    and query interfaces."""
+
     def __init__(
         self,
         command: OrderCommandInterface,
         query: OrderQueryInterface,
-        cache_repository: OrderPersistenceRepositoryInterface,
+        cache_repository: OrderAggregateRepositoryInterface,
     ) -> None:
         self.cache_repository = cache_repository
         self._command = command
@@ -32,16 +31,13 @@ class OrderMediator(OrderMediatorInterface):
         return OrderId(str(ObjectId()))
 
     async def create_new_order(
-        self, buyer_id: BuyerId, items: List[OrderItem], destination: Address
+        self, buyer_id: BuyerId, items: list[OrderItem], destination: Address
     ) -> OrderId:
 
         order_id = await self.next_identity()
 
         await self._command.create_new_order(
-            order_id=order_id,
-            buyer_id=buyer_id,
-            items=items,
-            destination=destination
+            order_id=order_id, buyer_id=buyer_id, items=items, destination=destination
         )
 
         return order_id

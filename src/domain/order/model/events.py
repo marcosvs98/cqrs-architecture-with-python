@@ -1,13 +1,8 @@
 from enum import Enum
-from typing import List
 
 from pydantic import Field
 
-from domain.base.entity import AggregateRoot
 from domain.base.event import DomainEvent
-from domain.maps.value_objects import Address
-from domain.order.value_objects import BuyerId, OrderId, OrderItem
-from domain.payment.value_objects import PaymentId
 
 
 class OrderEventName(Enum):

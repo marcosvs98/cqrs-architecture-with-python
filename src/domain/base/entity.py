@@ -1,5 +1,5 @@
 import json
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from pydantic import Field
 
@@ -9,7 +9,7 @@ from domain.base.model import Model
 class Entity(Model):
     """Base class for domain entitie objects."""
 
-    id: UUID = Field(default_factory=uuid4)
+    id: str = Field(default_factory=lambda: uuid4().hex)
     version: int = 0
 
     def increase_version(self):

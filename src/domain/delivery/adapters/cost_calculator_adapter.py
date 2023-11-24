@@ -1,7 +1,8 @@
-from domain.delivery.ports.cost_calculator_interface import \
-    DeliveryCostCalculatorAdapterInterface  # noqa: E501
+from domain.delivery.ports.cost_calculator_interface import (
+    DeliveryCostCalculatorAdapterInterface,
+)  # noqa: E501
+from domain.maps.model.value_objects import Address
 from domain.maps.ports.maps_adapter_interface import MapsAdapterInterface
-from domain.maps.value_objects import Address
 
 ORDER_PRICE_THRESHOLD = 500.0
 FREE_DISTANCE_THRESHOLD = 10.0

@@ -1,16 +1,16 @@
 import uuid
 from enum import Enum
-from typing import List
 
 from bson import ObjectId
-from pydantic import BaseModel
+from pydantic import ConfigDict
 
-from domain.order.entities import Order
-from domain.order.value_objects import BuyerId, OrderId
-from domain.payment.value_objects import PaymentId
+from domain.base.dto import DataTransferObject
+from domain.order.model.entities import Order
+from domain.order.model.value_objects import BuyerId, OrderId, OrderItem
+from domain.payment.model.value_objects import PaymentId
 
 
-class Address(BaseModel):
+class Address(DataTransferObject):
     house_number: str
     road: str
     sub_district: str
@@ -19,8 +19,8 @@ class Address(BaseModel):
     postcode: str
     country: str
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             'example': {
                 'house_number': '70',
                 'road': 'Rua Afonso Charlier',
@@ -31,45 +31,36 @@ class Address(BaseModel):
                 'country': 'Brazil',
             }
         }
+    )
 
 
-class OrderItem(BaseModel):
-    product_id: str
-    amount: int
-
-    class Config:
-        schema_extra = {
-            'example': {
-                'product_id': str(ObjectId()),
-                'amount': 20,
-            }
-        }
-
-
-class OrderCreateRequest(BaseModel):
+class OrderCreateRequest(DataTransferObject):
     buyer_id: BuyerId
-    items: List[OrderItem]
+    items: list[OrderItem]
     destination: Address
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        json_schema_extra={
             'example': {
                 'buyer_id': str(ObjectId()),
-                'items': [OrderItem.schema()['example']],
+                'items': [{'product_id': '63ce91dc6a4c8287bfdde046', 'amount': 200}],
                 'destination': Address.schema()['example'],
             }
-        }
+        },
+    )
 
 
-class OrderCreateResponse(BaseModel):
+class OrderCreateResponse(DataTransferObject):
     order_id: OrderId
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             'example': {
                 'order_id': str(ObjectId()),
             }
         }
+    )
 
 
 class OrderStatus(str, Enum):
@@ -78,52 +69,52 @@ class OrderStatus(str, Enum):
     cancelled: str = 'cancelled'
 
 
-class OrderUpdateStatusRequest(BaseModel):
+class OrderUpdateStatusRequest(DataTransferObject):
     status: str
 
-    class Config:
-        schema_extra = {'example': {'status': 'paid'}}
+    model_config = ConfigDict(json_schema_extra={'example': {'status': 'paid'}})
 
 
-class OrderUpdateStatusResponse(BaseModel):
+class OrderUpdateStatusResponse(DataTransferObject):
     order_id: OrderId
     status: OrderStatus
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             'example': {
                 'order_id': str(ObjectId()),
                 'status': 'paid',
             }
         }
+    )
 
     @classmethod
     def from_order_id(cls, order_id: OrderId):
         return cls(order_id=str(order_id))
 
 
-class OrderDetail(BaseModel):
+class OrderDetail(DataTransferObject):
     buyer_id: BuyerId
     payment_id: PaymentId
-    items: List[OrderItem]
-
+    items: list[OrderItem]
     product_cost: float
     delivery_cost: float
     total_cost: float
     status: OrderStatus
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             'example': {
                 'buyer_id': str(ObjectId()),
                 'payment_id': str(uuid.uuid4()),
-                'items': [OrderItem.schema()['example']],
+                'items': [{'product_id': '63ce91dc6a4c8287bfdde046', 'amount': 200}],
                 'product_cost': 424.2,
                 'delivery_cost': 42.42,
                 'total_cost': 466.62,
                 'status': 'waiting',
             }
         }
+    )
 
     @classmethod
     def from_order(cls, order: Order):

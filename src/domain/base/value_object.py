@@ -1,6 +1,7 @@
-from typing import TypeVar
+from typing import Any, TypeVar, Union
 
-from pydantic import validator
+from pydantic import ConfigDict, GetCoreSchemaHandler, ValidationError, ValidationInfo
+from pydantic_core import CoreSchema, core_schema
 
 from domain.base.model import Model
 
@@ -20,26 +21,36 @@ class ValueObject(Model):
 
         return True
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-class StrIdValueObject(ValueObject):
+class StrIdValueObject(str):
     """Base class for string value objects"""
 
-    value: str
+    value: Union[str, 'StrIdValueObject']
 
-    def __init__(self, value):  # noqa: W0622:
-        super().__init__(value=value)
+    def __init__(self, value: Union[str, 'StrIdValueObject'], field_name: str | None = None):
+        self.value = value
+        self.field_name = field_name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.value)
 
-    @validator('*')
-    def validate(cls, value):
-        if isinstance(value, StrIdValueObject):
-            return str(value)
-        return value
+    @classmethod
+    def validate(
+        cls, value: Union[str, 'StrIdValueObject'], info: ValidationInfo
+    ) -> 'StrIdValueObject':
+        if isinstance(value, str):
+            return value
+        raise ValidationError()
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.with_info_after_validator_function(
+            cls.validate, handler(str), field_name=handler.field_name
+        )

@@ -1,9 +1,9 @@
 from domain.base.event import DomainEvent
 from domain.base.ports.event_adapter_interface import DomainEventPublisher
-from domain.order.ports.event_publisher_interface import \
-    EventPublisherInterface
-from domain.order.ports.order_event_store_repository_interface import \
-    OrderEventStoreRepositoryInterface
+from domain.order.ports.event_publisher_interface import EventPublisherInterface
+from domain.order.ports.order_event_store_repository_interface import (
+    OrderEventStoreRepositoryInterface,
+)
 
 
 class OrderEventPublisher(DomainEventPublisher):

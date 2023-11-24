@@ -1,6 +1,6 @@
 import abc
 
-from domain.payment.value_objects import PaymentId
+from domain.payment.model.value_objects import PaymentId
 
 
 class PaymentAdapterInterface(abc.ABC):

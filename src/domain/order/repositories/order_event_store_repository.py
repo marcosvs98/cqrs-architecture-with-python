@@ -1,16 +1,15 @@
 import logging
-from typing import Union
 
 from pydantic import ValidationError
 from pymongo.errors import DuplicateKeyError
 
-from domain.base.entity import AggregateRoot
 from domain.base.event import DomainEvent
-from domain.order.ports.order_event_store_repository_interface import \
-    OrderEventStoreRepositoryInterface
-from domain.order.ports.store_connector_adapter_interface import \
-    StoreConnectorAdapterInterface
-from domain.order.value_objects import OrderId
+from domain.order.model.entities import Order
+from domain.order.model.value_objects import OrderId
+from domain.order.ports.order_event_store_repository_interface import (
+    OrderEventStoreRepositoryInterface,
+)
+from domain.order.ports.store_connector_adapter_interface import StoreConnectorAdapterInterface
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +24,10 @@ class OrderEventStoreRepository(OrderEventStoreRepositoryInterface):
         self.db_connection = db_connection
         self.collection_name = collection_name
 
-    async def from_id(self, order_id: OrderId) -> Union[AggregateRoot, None]:
+    async def from_id(self, order_id: OrderId) -> list[DomainEvent] | None:
         connection = await self.db_connection.get_connection()
         events = []
-        result = connection[self.collection_name].find({'order_id': order_id})
+        result = connection[self.collection_name].find({'aggregate.order_id': order_id})
         events_list = await result.to_list(length=None)
         if events_list:
             logger.info(f'Retrieved all events for order_id: {order_id}')
@@ -40,7 +39,7 @@ class OrderEventStoreRepository(OrderEventStoreRepositoryInterface):
 
         event_old = await self.get_last_event_version_from_entity(aggregate_root.order_id)
         if event_old:
-            aggregate_root_old = event_old.aggregate
+            aggregate_root_old = Order.model_validate(event_old.aggregate)
 
             if aggregate_root_old and aggregate_root_old.version > aggregate_root.version:
                 error_message = (
@@ -74,26 +73,20 @@ class OrderEventStoreRepository(OrderEventStoreRepositoryInterface):
             events = [DomainEvent.parse_obj(event) for event in events_list]
         return events
 
-    async def get_last_event_version_from_entity(
-        self, order_id: OrderId
-    ) -> Union[DomainEvent, None]:
+    async def get_last_event_version_from_entity(self, order_id: OrderId) -> DomainEvent | None:
         connection = await self.db_connection.get_connection()
         events = connection[self.collection_name].find(
-            {'data.order_id': order_id}, sort=[('version', -1)], limit=1
+            {'aggregate.order_id': order_id}, sort=[('version', -1)], limit=1
         )
         events_list = await events.to_list(length=None)
         if events_list:
             event = events_list[0]
             event.pop('_id', None)
-            logger.info(
-                f'Retrieved last aggregate version event for order id: {order_id}'
-            )
+            logger.info(f'Retrieved last aggregate version event for order id: {order_id}')
             return DomainEvent.parse_obj(event)
         return None
 
-    async def rebuild_aggregate_root(
-        self, event: DomainEvent, aggregate_class: AggregateRoot
-    ) -> AggregateRoot:
+    async def rebuild_aggregate_root(self, event: DomainEvent, aggregate_class: Order) -> Order:
         try:
             aggregate_root = aggregate_class.parse_obj(event.aggregate.dict())
         except ValidationError as e:

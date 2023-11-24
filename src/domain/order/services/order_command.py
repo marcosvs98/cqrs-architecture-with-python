@@ -1,23 +1,20 @@
-from typing import List
-
 from domain.base.ports.event_adapter_interface import DomainEventPublisher
-from domain.delivery.ports.cost_calculator_interface import \
-    DeliveryCostCalculatorAdapterInterface  # noqa: E501
-from domain.maps.value_objects import Address
-from domain.order.entities import Order
-from domain.order.events import OrderCancelled, OrderCreated, OrderPaid
-from domain.order.ports.order_aggregate_repository_interface import \
-    OrderAggregateRepositoryInterface
-from domain.order.ports.order_command_interface import \
-    OrderCommandInterface  # noqa: E501
-from domain.order.value_objects import BuyerId, OrderId, OrderItem
-from domain.payment.ports.payment_adapter_interface import \
-    PaymentAdapterInterface  # noqa: E501
-from domain.product.ports.product_adapter_interface import \
-    ProductAdapterInterface  # noqa: E501
+from domain.delivery.ports.cost_calculator_interface import DeliveryCostCalculatorAdapterInterface
+from domain.maps.model.value_objects import Address
+from domain.order.model.entities import Order
+from domain.order.model.events import OrderCancelled, OrderCreated, OrderPaid
+from domain.order.model.value_objects import BuyerId, OrderId, OrderItem
+from domain.order.ports.order_aggregate_repository_interface import (
+    OrderAggregateRepositoryInterface,
+)
+from domain.order.ports.order_command_interface import OrderCommandInterface
+from domain.payment.ports.payment_adapter_interface import PaymentAdapterInterface
+from domain.product.ports.product_adapter_interface import ProductAdapterInterface
 
 
 class OrderCommand(OrderCommandInterface):
+    """Handles commands related to order operations, such as  creating,
+    paying, and canceling orders."""
 
     def __init__(
         self,
@@ -34,7 +31,7 @@ class OrderCommand(OrderCommandInterface):
         self.event_publisher = event_publisher
 
     async def create_new_order(
-        self, order_id: OrderId, buyer_id: BuyerId, items: List[OrderItem], destination: Address
+        self, order_id: OrderId, buyer_id: BuyerId, items: list[OrderItem], destination: Address
     ) -> None:
 
         product_counts = [(item.product_id, int(item.amount)) for item in items]
@@ -51,7 +48,7 @@ class OrderCommand(OrderCommandInterface):
             payment_id=payment_id,
         )
         await self.repository.save(order)
-        await self.mediator.cache_repository.persist_order(order)
+        await self.mediator.cache_repository.save(order)
 
         event = OrderCreated(aggregate=order)
 
@@ -68,15 +65,18 @@ class OrderCommand(OrderCommandInterface):
         order = await self.repository.from_id(order_id)
         order.cancel()
 
+        await self.repository.save(order)
+        await self.mediator.cache_repository.save(order)
         event = OrderCancelled(aggregate=order)
 
         await self.event_publisher.publish(event)
-        await self.repository.save(order)
 
     async def _pay_order_tnx(self, order_id, is_payment_verified) -> None:
         order = await self.repository.from_id(order_id=order_id)
         order.pay(is_payment_verified=is_payment_verified)
 
-        event = OrderPaid(aggregate=order)
-        await self.event_publisher.publish(event)
         await self.repository.save(order)
+        await self.mediator.cache_repository.save(order)
+        event = OrderPaid(aggregate=order)
+
+        await self.event_publisher.publish(event)

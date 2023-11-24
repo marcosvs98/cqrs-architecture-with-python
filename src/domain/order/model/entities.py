@@ -1,21 +1,23 @@
-from typing import List
-
 from domain.base.entity import AggregateRoot
 from domain.order.exceptions.order_exceptions import (
-    OrderAlreadyCancelledException, OrderAlreadyPaidException,
-    PaymentNotVerifiedException)
-from domain.order.value_objects import BuyerId, OrderId, OrderItem, OrderStatus
-from domain.payment.value_objects import PaymentId
+    OrderAlreadyCancelledException,
+    OrderAlreadyPaidException,
+    PaymentNotVerifiedException,
+)
+from domain.order.model.value_objects import BuyerId, OrderId, OrderItem, OrderStatus
+from domain.payment.model.value_objects import PaymentId
 
 
 class Order(AggregateRoot):
+    """Represents an order in the system."""
+
     order_id: OrderId
     buyer_id: BuyerId
-    items: List[OrderItem]
+    items: list[OrderItem]
     product_cost: float
     delivery_cost: float
     payment_id: PaymentId
-    status: OrderStatus = OrderStatus.Enum.WAITING
+    status: OrderStatus = OrderStatus(OrderStatus.Enum.WAITING)
     version: int = 0
 
     def pay(self, is_payment_verified: bool):
@@ -26,7 +28,7 @@ class Order(AggregateRoot):
         if not is_payment_verified:
             raise PaymentNotVerifiedException(detail=f'Payment {self.payment_id} must be verified')
 
-        self.status = OrderStatus.Enum.PAID
+        self.status = OrderStatus(OrderStatus.Enum.PAID)
 
     def cancel(self):
         if self.is_cancelled():
@@ -34,7 +36,7 @@ class Order(AggregateRoot):
         if self.is_paid():
             raise OrderAlreadyPaidException(detail="Order's already paid")
 
-        self.status = OrderStatus.Enum.CANCELLED
+        self.status = OrderStatus(OrderStatus.Enum.CANCELLED)
 
     def is_waiting(self) -> bool:
         return self._get_order_status(self.status).is_waiting()
@@ -51,9 +53,3 @@ class Order(AggregateRoot):
     @property
     def total_cost(self) -> float:
         return self.product_cost + self.delivery_cost
-
-    def increase_version(self):
-        self.version += 1
-
-    class Config:
-        arbitrary_types_allowed = True

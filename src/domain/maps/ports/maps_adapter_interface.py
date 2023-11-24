@@ -1,6 +1,6 @@
 import abc
 
-from domain.maps.value_objects import Address
+from domain.maps.model.value_objects import Address
 
 
 class MapsAdapterInterface(abc.ABC):

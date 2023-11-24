@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Union
 
 
 class CacheInterface(ABC):
@@ -10,7 +9,7 @@ class CacheInterface(ABC):
         self.silent_mode = silent_mode
 
     @abstractmethod
-    async def get(self, key: str) -> Union[dict, None]:
+    async def get(self, key: str) -> dict | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -19,4 +18,4 @@ class CacheInterface(ABC):
 
     @abstractmethod
     async def delete(self, key: str) -> None:
-        raise
+        raise NotImplementedError
