@@ -426,7 +426,6 @@ preferred-modules=
 overgeneral-exceptions=builtins.CommonExceptions,
                        builtins.Exception,
                        builtins.BaseException,
-                       zpy_toolbox.exceptions.CommonExceptions,
 
 [REFACTORING]
 
