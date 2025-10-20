@@ -41,6 +41,16 @@ class Order(AggregateRoot):
             raise OrderAlreadyPaidException(detail='order already paid')
         self.status = OrderStatusEnum.CANCELLED
 
+    def reject_payment(self) -> None:
+        if self.is_paid():
+            raise OrderAlreadyPaidException(detail='order already paid')
+        self.status = OrderStatusEnum.PAYMENT_REJECTED
+
+    def reject_cancellation(self) -> None:
+        if self.is_cancelled():
+            raise OrderAlreadyCancelledException(detail='order already cancelled')
+        self.status = OrderStatusEnum.CANCELLATION_REJECTED
+
     def is_waiting(self) -> bool:
         return self.status is OrderStatusEnum.WAITING
 

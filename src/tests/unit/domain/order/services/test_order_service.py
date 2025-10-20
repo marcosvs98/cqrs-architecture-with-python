@@ -1,200 +1,176 @@
-# pylint: disable=redefined-outer-name, protected-access
-from unittest.mock import MagicMock
+# pylint: disable=redefined-outer-name
+from decimal import Decimal
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
-from domain.delivery.adapters.cost_calculator_adapter import (
-    DeliveryCostCalculatorAdapter,
-)
-from domain.maps.model.value_objects import Address
+from domain.base.ports.event_adapter_interface import DomainEventPublisher
+from domain.delivery.ports.cost_calculator_interface import DeliveryCostCalculatorAdapterInterface
 from domain.order.exceptions.order_exceptions import (
-    OrderAlreadyCancelledException,
     OrderAlreadyPaidException,
+    OrderNotFound,
     PaymentNotVerifiedException,
 )
 from domain.order.model.entities import Order
-from domain.order.model.events import OrderCancelled, OrderPaid
-from domain.order.model.value_objects import BuyerId, OrderId, OrderItem
-from domain.order.repositories.order_event_store_repository import (
-    OrderEventStoreRepository,
+from domain.order.model.value_objects import BuyerId, OrderId, OrderItem, OrderStatusEnum
+from domain.order.ports.order_event_store_repository_interface import (
+    OrderEventStoreRepositoryInterface,
 )
-from domain.order.repositories.order_repository import (
-    OrderRepository,
-)
+from domain.order.ports.order_repository_interface import OrderRepositoryInterface
+from domain.order.repositories.order_read_repository import OrderReadRepository
 from domain.order.services.order_service import OrderService
-from domain.payment.adapters.paypal_adapter import PayPalPaymentAdapter
-from domain.product.adapters.product_adapter import ProductAdapter
+from domain.payment.model.value_objects import PaymentId
+from domain.payment.ports.payment_adapter_interface import PaymentAdapterInterface
+from domain.product.ports.product_adapter_interface import ProductAdapterInterface
 
 
 @pytest.fixture
-def order_service():
-    return OrderService(
-        repository=MagicMock(spec=OrderRepository),
-        payment_service=MagicMock(spec=PayPalPaymentAdapter),
-        product_service=MagicMock(spec=ProductAdapter),
-        delivery_service=MagicMock(spec=DeliveryCostCalculatorAdapter),
-        event_store=MagicMock(spec=OrderEventStoreRepository),
+def service_with_deps():
+    repository = AsyncMock(spec=OrderRepositoryInterface)
+    event_store = AsyncMock(spec=OrderEventStoreRepositoryInterface)
+    read_repository = AsyncMock(spec=OrderReadRepository)
+    payment_service = AsyncMock(spec=PaymentAdapterInterface)
+    product_service = AsyncMock(spec=ProductAdapterInterface)
+    delivery_service = AsyncMock(spec=DeliveryCostCalculatorAdapterInterface)
+    event_publisher = AsyncMock(spec=DomainEventPublisher)
+
+    product_service.total_price.return_value = Decimal('120.50')
+    payment_service.new_payment.return_value = PaymentId('payment-1')
+    delivery_service.calculate_cost.return_value = Decimal('30.00')
+
+    service = OrderService(
+        repository=repository,
+        payment_service=payment_service,
+        product_service=product_service,
+        delivery_service=delivery_service,
+        event_store=event_store,
+        read_repository=read_repository,
+        event_publisher=event_publisher,
     )
+
+    deps = SimpleNamespace(
+        repository=repository,
+        event_store=event_store,
+        read_repository=read_repository,
+        payment_service=payment_service,
+        product_service=product_service,
+        delivery_service=delivery_service,
+        event_publisher=event_publisher,
+    )
+
+    return service, deps
 
 
 @pytest.mark.asyncio
-async def test_create_new_order(order_service):
-    items = [OrderItem(product_id='p1', amount=2)]
-    order_service.product_service.total_price.return_value = 100
-    order_service.payment_service.new_payment.return_value = 'pay123'
-    order_service.delivery_service.calculate_cost.return_value = 10
-
-    order_id = await order_service.create_new_order(
-        buyer_id=BuyerId('b1'),
-        items=items,
-        destination=Address(
-            house_number='S/N',
-            road='Rua A',
-            sub_district='Bairro X',
-            district='Cidade Y',
-            state='Rio Grande do Sul',
-            postcode='12345-678',
-            country='Brasil',
-        ),
+async def test_create_new_order_projects_and_publishes(service_with_deps):
+    service, deps = service_with_deps
+    order_id = await service.create_new_order(
+        buyer_id=BuyerId('buyer-1'),
+        items=[OrderItem(product_id='product-1', amount=Decimal('2'))],
+        destination=SimpleNamespace(),
     )
 
-    order_service.product_service.total_price.assert_called_once()
-    order_service.payment_service.new_payment.assert_called_once_with(100)
-    order_service.delivery_service.calculate_cost.assert_called_once()
-    order_service.repository.save.assert_awaited()
-    order_service.event_store.save.assert_awaited()
+    saved_order = deps.repository.save.await_args.args[0]
     assert isinstance(order_id, OrderId)
+    assert saved_order.product_cost == Decimal('120.50')
+    assert saved_order.delivery_cost == Decimal('30.00')
+    deps.event_store.save.assert_awaited()
+    deps.read_repository.project.assert_awaited()
+    deps.event_publisher.publish.assert_awaited()
 
 
 @pytest.mark.asyncio
-async def test_pay_order(order_service):
-    fake_order = MagicMock(spec=Order)
-    fake_order.payment_id = 'pay123'
-    order_service.repository.from_id.return_value = fake_order
-    order_service.payment_service.verify_payment.return_value = True
-
-    await order_service.pay_order(order_id=OrderId('o1'))
-
-    order_service.repository.from_id.assert_awaited_with(order_id='o1')
-    order_service.payment_service.verify_payment.assert_awaited_with(payment_id='pay123')
-    order_service.repository.save.assert_awaited()
-    order_service.event_store.save.assert_awaited()
-    stored_event = order_service.event_store.save.call_args.args[0]
-    assert isinstance(stored_event, OrderPaid)
-
-
-@pytest.mark.asyncio
-async def test_cancel_order(order_service):
-    fake_order = MagicMock(spec=Order)
-    fake_order.status = 'cancelled'
-    order_service.repository.from_id.return_value = fake_order
-
-    await order_service.cancel_order(order_id=OrderId('o2'))
-
-    fake_order.cancel.assert_called_once()
-    order_service.repository.save.assert_awaited_with(fake_order)
-    stored_event = order_service.event_store.save.call_args.args[0]
-    assert isinstance(stored_event, OrderCancelled)
-
-
-@pytest.mark.asyncio
-async def test__pay_order_tnx(order_service):
-    fake_order = MagicMock(spec=Order)
-    order_service.repository.from_id.return_value = fake_order
-
-    await order_service._pay_order_tnx(order_id=OrderId('o3'), is_payment_verified=True)
-
-    fake_order.pay.assert_called_once_with(is_payment_verified=True)
-    order_service.repository.save.assert_awaited_with(fake_order)
-    stored_event = order_service.event_store.save.call_args.args[0]
-    assert isinstance(stored_event, OrderPaid)
-
-
-@pytest.mark.asyncio
-async def test_get_order_from_id(order_service):
-    fake_order = MagicMock(spec=Order)
-    order_service.repository.from_id.return_value = fake_order
-
-    result = await order_service.get_order_from_id(order_id=OrderId('o4'))
-
-    order_service.repository.from_id.assert_awaited_with('o4')
-    assert result is fake_order
-
-
-@pytest.mark.asyncio
-async def test__pay_order_tnx_raises_if_order_already_cancelled(order_service):
+async def test_pay_order_success(service_with_deps):
+    service, deps = service_with_deps
     order = Order(
-        buyer_id=BuyerId('b1'),
-        items=[OrderItem(product_id='p1', amount=1)],
-        product_cost=100,
-        delivery_cost=10,
-        payment_id='pay123',
+        buyer_id=BuyerId('buyer-1'),
+        items=[OrderItem(product_id='product-1', amount=Decimal('1'))],
+        product_cost=Decimal('10.00'),
+        delivery_cost=Decimal('5.00'),
+        payment_id=PaymentId('payment-1'),
     )
-    order.cancel()
-    order_service.repository.from_id.return_value = order
+    deps.repository.from_id.return_value = order
+    deps.payment_service.verify_payment.return_value = True
 
-    with pytest.raises(OrderAlreadyCancelledException):
-        await order_service._pay_order_tnx(order_id=order.id, is_payment_verified=True)
+    await service.pay_order(OrderId(order.id))
+
+    assert order.is_paid()
+    deps.repository.save.assert_awaited_with(order)
+    deps.event_store.save.assert_awaited()
+    deps.read_repository.project.assert_awaited()
+    deps.event_publisher.publish.assert_awaited()
 
 
 @pytest.mark.asyncio
-async def test__pay_order_tnx_raises_if_order_already_paid(order_service):
+async def test_pay_order_payment_rejected(service_with_deps):
+    service, deps = service_with_deps
     order = Order(
-        buyer_id=BuyerId('b1'),
-        items=[OrderItem(product_id='p1', amount=1)],
-        product_cost=100,
-        delivery_cost=10,
-        payment_id='pay123',
+        buyer_id=BuyerId('buyer-1'),
+        items=[OrderItem(product_id='product-1', amount=Decimal('1'))],
+        product_cost=Decimal('10.00'),
+        delivery_cost=Decimal('5.00'),
+        payment_id=PaymentId('payment-1'),
     )
-    order.status = order.status.PAID
-    order_service.repository.from_id.return_value = order
-
-    with pytest.raises(OrderAlreadyPaidException):
-        await order_service._pay_order_tnx(order_id=order.id, is_payment_verified=True)
-
-
-@pytest.mark.asyncio
-async def test__pay_order_tnx_raises_if_payment_not_verified(order_service):
-    order = Order(
-        buyer_id=BuyerId('b1'),
-        items=[OrderItem(product_id='p1', amount=1)],
-        product_cost=100,
-        delivery_cost=10,
-        payment_id='pay123',
-    )
-    order_service.repository.from_id.return_value = order
+    deps.repository.from_id.return_value = order
+    deps.payment_service.verify_payment.return_value = False
 
     with pytest.raises(PaymentNotVerifiedException):
-        await order_service._pay_order_tnx(order_id=order.id, is_payment_verified=False)
+        await service.pay_order(OrderId(order.id))
+
+    assert order.status is OrderStatusEnum.PAYMENT_REJECTED
+    deps.event_store.save.assert_awaited()
+    deps.read_repository.project.assert_awaited()
+    deps.event_publisher.publish.assert_awaited()
 
 
 @pytest.mark.asyncio
-async def test_cancel_order_raises_if_already_cancelled(order_service):
+async def test_cancel_order_rejects_when_paid(service_with_deps):
+    service, deps = service_with_deps
     order = Order(
-        buyer_id=BuyerId('b1'),
-        items=[OrderItem(product_id='p1', amount=1)],
-        product_cost=100,
-        delivery_cost=10,
-        payment_id='pay123',
+        buyer_id=BuyerId('buyer-1'),
+        items=[OrderItem(product_id='product-1', amount=Decimal('1'))],
+        product_cost=Decimal('10.00'),
+        delivery_cost=Decimal('5.00'),
+        payment_id=PaymentId('payment-1'),
+        status=OrderStatusEnum.PAID,
     )
-    order.cancel()
-    order_service.repository.from_id.return_value = order
-
-    with pytest.raises(OrderAlreadyCancelledException):
-        await order_service.cancel_order(order_id=order.id)
-
-
-@pytest.mark.asyncio
-async def test_cancel_order_raises_if_already_paid(order_service):
-    order = Order(
-        buyer_id=BuyerId('b1'),
-        items=[OrderItem(product_id='p1', amount=1)],
-        product_cost=100,
-        delivery_cost=10,
-        payment_id='pay123',
-    )
-    order.status = order.status.PAID
-    order_service.repository.from_id.return_value = order
+    deps.repository.from_id.return_value = order
 
     with pytest.raises(OrderAlreadyPaidException):
-        await order_service.cancel_order(order_id=order.id)
+        await service.cancel_order(OrderId(order.id))
+
+    assert order.status is OrderStatusEnum.CANCELLATION_REJECTED
+    deps.event_store.save.assert_awaited()
+    deps.read_repository.project.assert_awaited()
+    deps.event_publisher.publish.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_cancel_order_success(service_with_deps):
+    service, deps = service_with_deps
+    order = Order(
+        buyer_id=BuyerId('buyer-1'),
+        items=[OrderItem(product_id='product-1', amount=Decimal('1'))],
+        product_cost=Decimal('10.00'),
+        delivery_cost=Decimal('5.00'),
+        payment_id=PaymentId('payment-1'),
+    )
+    deps.repository.from_id.return_value = order
+
+    await service.cancel_order(OrderId(order.id))
+
+    assert order.status is OrderStatusEnum.CANCELLED
+    deps.repository.save.assert_awaited_with(order)
+    deps.event_store.save.assert_awaited()
+    deps.read_repository.project.assert_awaited()
+    deps.event_publisher.publish.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_get_order_not_found(service_with_deps):
+    service, deps = service_with_deps
+    deps.repository.from_id.return_value = None
+
+    with pytest.raises(OrderNotFound):
+        await service.get_order_from_id(OrderId('order-404'))

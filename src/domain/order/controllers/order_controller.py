@@ -5,7 +5,6 @@ from fastapi import APIRouter, Request
 from domain.order.dtos.order_dtos import (
     OrderCreateRequest,
     OrderCreateResponse,
-    OrderDetail,
     OrderStatusEnum,
     OrderUpdateStatusRequest,
     OrderUpdateStatusResponse,
@@ -19,7 +18,6 @@ from domain.order.exceptions.order_exceptions import (
     OrderAlreadyCancelledException,
     OrderAlreadyPaidException,
     OrderIdRequired,
-    OrderNotFound,
     PaymentNotVerifiedException,
     PaymentVerificationFailed,
 )
@@ -33,12 +31,9 @@ class OrderController:
     def __init__(self, order_service: OrderServiceInterface) -> None:
         """Bind routes and dependencies."""
         self.order_service = order_service
-        self.router = APIRouter(tags=['Order'], prefix='/core/v1/orders')
+        self.router = APIRouter(tags=['Order Command'], prefix='/core/v1/orders')
         self.router.add_api_route(
             '/', self.create_order, methods=['POST'], response_model=OrderCreateResponse
-        )
-        self.router.add_api_route(
-            '/{order_id}', self.get_order, methods=['GET'], response_model=OrderDetail
         )
         self.router.add_api_route(
             '/{order_id}',
@@ -52,17 +47,11 @@ class OrderController:
     ) -> OrderCreateResponse:
         """Create a new order."""
         buyer_id = BuyerId(order.buyer_id)
+        destination = order.destination.to_value_object()
         order_id = await self.order_service.create_new_order(
-            buyer_id, order.items, order.destination
+            buyer_id, list(order.items), destination
         )
         return OrderCreateResponse(order_id=str(order_id))
-
-    async def get_order(self, request: Request, order_id: Annotated[str, OrderId]) -> OrderDetail:
-        """Retrieve order by id."""
-        order = await self.order_service.get_order_from_id(order_id=order_id)
-        if not order:
-            raise OrderNotFound(detail=f"Order '{order_id}' not found")
-        return OrderDetail.from_order(order)
 
     async def update_order(
         self,

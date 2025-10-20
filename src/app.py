@@ -1,5 +1,6 @@
+from datetime import datetime, timezone
+
 from fastapi import FastAPI
-from fastapi_pagination import add_pagination
 
 from containers import AppContainer
 from rest import init_middlewares, init_routes
@@ -16,6 +17,7 @@ def create_app() -> FastAPI:
         title=APPLICATION_NAME,
         description='FastAPI application using cqrs architecture',
     )
+    app.state.start_time = datetime.now(timezone.utc)
 
     # Initialization of middlewares and routes
     init_middlewares(app)
@@ -23,10 +25,8 @@ def create_app() -> FastAPI:
         app,
         [
             container.order_controller(),
+            container.order_query_controller(),
         ],
     )
-
-    # Addition of pagination support
-    add_pagination(app)
 
     return app

@@ -48,7 +48,7 @@ class AsyncMongoDBConnectorAdapter:
         await self._reset_connection()
 
     @asynccontextmanager
-    async def get_connection(self) -> AsyncGenerator[AsyncIOMotorDatabase, None]:
+    async def get_connection(self) -> AsyncGenerator[AsyncIOMotorDatabase]:
         try:
             self._ensure_connection()
             yield self._database

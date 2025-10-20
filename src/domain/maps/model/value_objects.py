@@ -4,9 +4,9 @@ from domain.base.value_object import ValueObject
 
 
 class StatesEnum(str, Enum):
-    RS = 'Rio Grande do Sul'
-    SP = 'São Paulo'
-    SC = 'Santa Catarina'
+    RS = 'RS'
+    SP = 'SP'
+    SC = 'SC'
 
     @classmethod
     def has_value(cls, value: str) -> bool:

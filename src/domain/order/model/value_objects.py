@@ -14,6 +14,8 @@ class OrderStatusEnum(str, Enum):
     WAITING = 'waiting'
     PAID = 'paid'
     CANCELLED = 'cancelled'
+    PAYMENT_REJECTED = 'payment_rejected'
+    CANCELLATION_REJECTED = 'cancellation_rejected'
 
     def __str__(self) -> str:
         return self.value

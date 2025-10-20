@@ -1,6 +1,7 @@
 import abc
 from typing import Annotated
 
+from domain.base.ports.event_adapter_interface import DomainEventPublisher
 from domain.delivery.ports.cost_calculator_interface import (  # noqa: E501
     DeliveryCostCalculatorAdapterInterface,
 )
@@ -13,6 +14,7 @@ from domain.order.ports.order_event_store_repository_interface import (
 from domain.order.ports.order_repository_interface import (
     OrderRepositoryInterface,
 )
+from domain.order.repositories.order_read_repository import OrderReadRepository
 from domain.payment.ports.payment_adapter_interface import (  # noqa: E501
     PaymentAdapterInterface,
 )
@@ -31,6 +33,8 @@ class OrderServiceInterface(abc.ABC):
         product_service: ProductAdapterInterface,
         delivery_service: DeliveryCostCalculatorAdapterInterface,
         event_store: OrderEventStoreRepositoryInterface,
+        read_repository: OrderReadRepository,
+        event_publisher: DomainEventPublisher,
     ) -> None:
         """Initialize dependencies for the order service."""
         self.repository = repository
@@ -38,6 +42,8 @@ class OrderServiceInterface(abc.ABC):
         self.product_service = product_service
         self.delivery_service = delivery_service
         self.event_store = event_store
+        self.read_repository = read_repository
+        self.event_publisher = event_publisher
 
     @abc.abstractmethod
     async def create_new_order(
@@ -54,12 +60,6 @@ class OrderServiceInterface(abc.ABC):
 
     @abc.abstractmethod
     async def cancel_order(self, order_id: Annotated[str, OrderId]) -> None:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    async def _pay_order_tnx(
-        self, order_id: Annotated[str, OrderId], is_payment_verified: bool
-    ) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
