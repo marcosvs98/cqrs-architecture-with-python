@@ -51,7 +51,9 @@ async def test_from_id_fetches_from_db_and_sets_cache(order_repository):
     result = await repo.from_id(order.id)
     assert isinstance(result, Order)
     assert result.id == order.id
-    cache.set.assert_awaited_once_with(key=str(order.id), data=order.model_dump(mode='json'))
+    cache.set.assert_awaited_once_with(
+        key=str(order.id), data=order.model_dump(mode='json'), ttl=300
+    )
 
 
 @pytest.mark.asyncio

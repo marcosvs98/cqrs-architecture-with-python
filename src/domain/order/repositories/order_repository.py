@@ -27,7 +27,7 @@ class OrderRepository(OrderRepositoryInterface):
             if not document:
                 return None
             order = Order.model_validate(document)
-            await self.cache_adapter.set(key=key, data=order.model_dump(mode='json'))
+            await self.cache_adapter.set(key=key, data=order.model_dump(mode='json'), ttl=300)
             return order
 
     async def save(self, order: Order) -> None:
@@ -39,16 +39,25 @@ class OrderRepository(OrderRepositoryInterface):
 
         if current:
             order.version = current.version
+            filter_query = {'_id': key, 'version': current.version}
+            upsert = False
+        else:
+            filter_query = {'_id': key}
+            upsert = True
 
         order.increase_version()
 
         async with self.db_connection.get_connection() as connection:
             try:
-                await connection[self.collection_name].replace_one(
-                    {'_id': key},
+                result = await connection[self.collection_name].replace_one(
+                    filter_query,
                     order.model_dump(mode='json'),
-                    upsert=True,
+                    upsert=upsert,
                 )
+                if current and result.matched_count == 0:
+                    raise EntityOutdated(detail='concurrent aggregate update detected')
+            except EntityOutdated:
+                raise
             except Exception as exc:
                 await logger.exception(
                     'Failed to persist order',
@@ -57,7 +66,7 @@ class OrderRepository(OrderRepositoryInterface):
                 )
                 raise PersistenceError(detail='failed to persist order') from exc
 
-        await self.cache_adapter.set(key=key, data=order.model_dump(mode='json'))
+        await self.cache_adapter.set(key=key, data=order.model_dump(mode='json'), ttl=300)
 
     async def delete(self, order_id: Annotated[str, OrderId]) -> None:
         """Delete an order aggregate by id."""

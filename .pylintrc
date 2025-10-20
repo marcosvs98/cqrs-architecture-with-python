@@ -74,7 +74,7 @@ limit-inference-results=100
 
 # List of plugins (as comma separated values of python module names) to load,
 # usually to register additional checkers.
-load-plugins=pylint_pydantic
+load-plugins=
 
 # Pickle collected data for later comparisons.
 persistent=yes
@@ -164,6 +164,7 @@ disable=
     C0103,  # invalid-name
     R0914,  # too-many-locals
     R0913,  # too-many-arguments
+    R0917,  # too-many-positional-arguments
     R0902,  # too-many-instance-attributes
     W0201,  # attribute-defined-outside-init
     C0415,  # import-outside-toplevel

@@ -23,7 +23,7 @@ class OrderEventStoreRepository(OrderEventStoreRepositoryInterface):
             events_list = await cursor.to_list(length=None)
             if not events_list:
                 return None
-            return [DomainEvent.parse_obj(event) for event in events_list]
+            return [DomainEvent.model_validate(event) for event in events_list]
 
     async def save(self, event: DomainEvent) -> None:
         """Persist a new domain event with optimistic concurrency checks."""
@@ -62,7 +62,9 @@ class OrderEventStoreRepository(OrderEventStoreRepositoryInterface):
         async with self.db_connection.get_connection() as connection:
             cursor = connection[self.collection_name].find({'tracker_id': tracker_id})
             events_list = await cursor.to_list(length=None)
-            return [DomainEvent.parse_obj(event) for event in events_list] if events_list else []
+            return (
+                [DomainEvent.model_validate(event) for event in events_list] if events_list else []
+            )
 
     async def get_last_event_version_from_entity(self, order_id: OrderId) -> DomainEvent | None:
         """Return the most recent event for a given aggregate id."""
@@ -77,7 +79,7 @@ class OrderEventStoreRepository(OrderEventStoreRepositoryInterface):
                 return None
             event = events_list[0]
             event.pop('_id', None)
-            return DomainEvent.parse_obj(event)
+            return DomainEvent.model_validate(event)
 
     async def rebuild_aggregate_root(
         self, event: DomainEvent, aggregate_class: type[Order]

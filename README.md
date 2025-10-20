@@ -90,10 +90,52 @@ Logs include contextual information (timestamp, level, module, line number) and 
 docker compose up -d && docker compose logs -f app
 ```
 
+The Compose stack now provisions MongoDB, Redis, Zookeeper and Kafka. Kafka is used by the
+`KafkaDomainEventPublisher` to broadcast domain events emitted by the ordering service. The
+application container is pre-configured with `EVENT_PUBLISHER_ENABLED=true` so events are
+published automatically in the local environment.
+
 ### Option 2 - Via Makefile
 ```bash
 Make build-env
 ```
+
+### API & Query Endpoints
+- `POST /core/v1/orders` — create an order (command side).
+- `PATCH /core/v1/orders/{order_id}` — update order status (command side).
+- `GET /core/v1/orders/{order_id}` — retrieve an order projection.
+- `GET /core/v1/orders` — list order projections with optional filters (`status`, `buyer_id`, `limit`, `offset`).
+- `GET /metrics` — lightweight service metrics (uptime) for scraping/observability.
+- `GET /` — health probe used by container health checks.
+
+The query endpoints are backed by a dedicated MongoDB projection (`order_projections`) that is
+kept in sync through the event store and published events.
+
+### Testing
+
+```bash
+poetry install  # ensure dev dependencies are available
+make tests      # runs pytest against src/tests/unit
+```
+
+A coverage-friendly target is also available via `make test-cov`.
+
+### Environment
+
+The `.env_example` file documents all configurable variables, including the read-model Mongo
+connection and Kafka publisher settings. Copy it to `.env` and adjust values as needed:
+
+```bash
+cp .env_example .env
+```
+
+Key variables:
+
+- `ORDER_REPOSITORY_*` — transactional aggregate store (MongoDB).
+- `ORDER_READ_*` — read-model projection store.
+- `ORDER_EVENT_STORE_*` — event sourcing collection.
+- `EVENT_PUBLISHER_*` — Kafka bootstrap and topic configuration.
+- `CACHE_SILENT_MODE` — controls Redis failure behaviour.
 
 ## References
 
